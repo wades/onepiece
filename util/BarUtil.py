@@ -10,15 +10,17 @@
 
 import pandas as pd
 
-from constant import FreqConst
+from constant import FreqConst, TradeTimeConst
 
 
 def get_min_index(day, type_=FreqConst.FREQ_1_MIN):
     """获取股票分钟线的index
     """
-
+    day = str(day)
     # if QA_util_if_trade(day) is True:
-    return pd.date_range(str(day) + ' 09:30:00', str(day) + ' 11:30:00', freq=type_, closed='right').append(
-            pd.date_range(str(day) + ' 13:00:00', str(day) + ' 15:00:00', freq=type_, closed='right'))
+    return pd.date_range(day + ' ' + TradeTimeConst.SS_TRADE_AM_S_TIME,
+                         day + ' ' + TradeTimeConst.SS_TRADE_AM_E_TIME, freq=type_, closed='right').append(
+            pd.date_range(day + ' ' + TradeTimeConst.SS_TRADE_PM_S_TIME,
+                          day + ' ' + TradeTimeConst.SS_TRADE_PM_E_TIME, freq=type_, closed='right'))
     # else:
     # return pd.DataFrame(['No trade'])
