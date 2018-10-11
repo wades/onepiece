@@ -27,3 +27,6 @@ class FREQUENCY:
     FREQ_30_MIN = "30min"
     # 时间频率60分钟
     FREQ_60_MIN = "60min"
+
+    # 分钟时间频率元组
+    TUPLE_FREQ_MIN = (FREQ_1_MIN, FREQ_3_MIN, FREQ_5_MIN, FREQ_10_MIN, FREQ_15_MIN, FREQ_30_MIN, FREQ_60_MIN)

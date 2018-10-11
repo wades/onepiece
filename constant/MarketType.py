@@ -39,3 +39,6 @@ class MARKET_TYPE:
     # FUND_CN = 'fund_cn'
     # 中国债券
     # BOND_CN = 'bond_cn'
+
+    # 市场元组
+    TUPLE_MARKET_TYPE = (STOCK_CN, STOCK_HK)
