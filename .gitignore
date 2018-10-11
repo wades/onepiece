@@ -1,3 +1,4 @@
 # Self-defined ignore
 
 .idea
+.pytest_cache
