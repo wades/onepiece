@@ -30,3 +30,11 @@ class FREQUENCY:
 
     # 分钟时间频率元组
     TUPLE_FREQ_MIN = (FREQ_1_MIN, FREQ_3_MIN, FREQ_5_MIN, FREQ_10_MIN, FREQ_15_MIN, FREQ_30_MIN, FREQ_60_MIN)
+
+    # 时间频率1小时
+    FREQ_1_HOUR = "1h"
+    # 时间频率2小时
+    FREQ_2_HOUR = "2h"
+
+    # 小时时间频率元组
+    TUPLE_FREQ_HOUR = (FREQ_1_HOUR, FREQ_2_HOUR)
