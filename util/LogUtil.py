@@ -18,15 +18,15 @@ from util import ConfigUtil
 
 log_config = ConfigUtil.get_log_config()
 logging.basicConfig(level=log_config['LEVEL'],
-                    format='%(asctime)s >>> %(message)s',
+                    format='%(asctime)s %(levelname)s [%(lineno)d] %(threadName)s Message: %(message)s',
                     datefmt='%H:%M:%S',
-                    filename='{}{}onepiece-{}-.log'.format(log_config['PATH'], os.sep, str(datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))),
-                    filemode='w',
+                    filename='{}{}onepiece-{}.log'.format(log_config['PATH'], os.sep, str(datetime.datetime.now().strftime('%Y-%m-%d'))),
+                    filemode='a',
                     )
 
 console = logging.StreamHandler()
 console.setLevel(log_config['LEVEL'])
-formatter = logging.Formatter('OnePiece>> %(message)s')
+formatter = logging.Formatter('%(asctime)s %(levelname)s [%(lineno)d] %(threadName)s Message: %(message)s')
 console.setFormatter(formatter)
 logging.getLogger('').addHandler(console)
 
