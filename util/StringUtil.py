@@ -12,3 +12,8 @@
 def is_empty(string):
     """"判断字符串是否为空"""
     return True if (string is None or not str(string).strip()) else False
+
+
+def is_not_empty(string):
+    """"判断字符串是否非空"""
+    return not is_empty(string)

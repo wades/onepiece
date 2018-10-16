@@ -9,8 +9,10 @@
 # Copyright (c) 2018 - 2020
 
 import configparser
+import logging
 import os
 
+from constant.Log import LOG
 from util import StringUtil
 from util.PathUtil import DEF_LOG_PATH, LOG_CONFIG_PATH
 
@@ -19,32 +21,41 @@ def get_log_config():
     """获取日志配置文件
     """
 
+    log_config = {
+        'PATH': DEF_LOG_PATH,
+        'LEVEL': logging.DEBUG
+    }
+
     config = configparser.ConfigParser()
     # 判断是否存在日志的配置文件
     if os.path.exists(LOG_CONFIG_PATH):
-        config.read(LOG_CONFIG_PATH)
         try:
-            # 获取日志目录配置
-            log_path = config.get('LOG', 'path')
-            # 日志地址为空
-            if StringUtil.is_empty(log_path):
-                config.set('LOG', 'path', DEF_LOG_PATH)
-                log_path = DEF_LOG_PATH
-            return log_path
-        except configparser.NoSectionError:
-            config.add_section('LOG')
-            config.set('LOG', 'path', DEF_LOG_PATH)
-            return DEF_LOG_PATH
-        except configparser.NoOptionError:
-            config.set('LOG', 'path', DEF_LOG_PATH)
-            return DEF_LOG_PATH
+            config.read(LOG_CONFIG_PATH)
+            try:
+                # 获取日志目录配置
+                log_path = config.get('LOG', 'path')
+                if StringUtil.is_not_empty(log_path):
+                    log_config['PATH'] = log_path
+            finally:
+                pass
+
+            try:
+                # 获取日志等级
+                log_level = config.get('LOG', 'level')
+                if StringUtil.is_not_empty(log_level) and log_level in LOG.TUPLE_LOG_LEVEL:
+                    if str(log_level).upper() == LOG.ERROR:
+                        log_config['LEVEL'] = logging.ERROR
+                    elif str(log_level).upper() == LOG.WARN:
+                        log_config['LEVEL'] = logging.WARN
+                    elif str(log_level).upper() == LOG.INFO:
+                        log_config['LEVEL'] = logging.INFO
+                    elif str(log_level).upper() == LOG.DEBUG:
+                        log_config['LEVEL'] = logging.DEBUG
+            finally:
+                pass
         finally:
             with open(LOG_CONFIG_PATH, 'w') as f:
                 config.write(f)
-    else:
-        f = open(LOG_CONFIG_PATH, 'w')
-        config.add_section('LOG')
-        config.set('LOG', 'path', DEF_LOG_PATH)
-        config.write(f)
-        f.close()
-        return DEF_LOG_PATH
+                f.close()
+
+    return log_config
