@@ -12,7 +12,7 @@ import configparser
 import os
 
 from util import StringUtil
-from util.PathUtil import LOG_PATH, LOG_CONFIG_PATH
+from util.PathUtil import DEF_LOG_PATH, LOG_CONFIG_PATH
 
 
 def get_log_config():
@@ -28,23 +28,23 @@ def get_log_config():
             log_path = config.get('LOG', 'path')
             # 日志地址为空
             if StringUtil.is_empty(log_path):
-                config.set('LOG', 'path', LOG_PATH)
-                log_path = LOG_PATH
+                config.set('LOG', 'path', DEF_LOG_PATH)
+                log_path = DEF_LOG_PATH
             return log_path
         except configparser.NoSectionError:
             config.add_section('LOG')
-            config.set('LOG', 'path', LOG_PATH)
-            return LOG_PATH
+            config.set('LOG', 'path', DEF_LOG_PATH)
+            return DEF_LOG_PATH
         except configparser.NoOptionError:
-            config.set('LOG', 'path', LOG_PATH)
-            return LOG_PATH
+            config.set('LOG', 'path', DEF_LOG_PATH)
+            return DEF_LOG_PATH
         finally:
             with open(LOG_CONFIG_PATH, 'w') as f:
                 config.write(f)
     else:
         f = open(LOG_CONFIG_PATH, 'w')
         config.add_section('LOG')
-        config.set('LOG', 'path', LOG_PATH)
+        config.set('LOG', 'path', DEF_LOG_PATH)
         config.write(f)
         f.close()
-        return LOG_PATH
+        return DEF_LOG_PATH

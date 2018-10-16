@@ -27,15 +27,9 @@ def get_min_index(date, freq=FREQUENCY.FREQ_1_MIN, market=MARKET_TYPE.STOCK_CN):
 
     # if QA_util_if_trade(day) is True:
     if market == MARKET_TYPE.STOCK_CN:
-        return pd.date_range(date + ' ' + TRADE_TIME.CN_TRADE_AM_S_TIME,
-                             date + ' ' + TRADE_TIME.CN_TRADE_AM_E_TIME, freq=freq, closed='right').append(
-                pd.date_range(date + ' ' + TRADE_TIME.CN_TRADE_PM_S_TIME,
-                              date + ' ' + TRADE_TIME.CN_TRADE_PM_E_TIME, freq=freq, closed='right'))
+        return __get_market_cn_index(date, freq)
     elif market == MARKET_TYPE.STOCK_HK:
-        return pd.date_range(date + ' ' + TRADE_TIME.HK_TRADE_AM_S_TIME,
-                             date + ' ' + TRADE_TIME.HK_TRADE_AM_E_TIME, freq=freq, closed='right').append(
-            pd.date_range(date + ' ' + TRADE_TIME.HK_TRADE_PM_S_TIME,
-                          date + ' ' + TRADE_TIME.HK_TRADE_PM_E_TIME, freq=freq, closed='right'))
+        return __get_market_hk_index(date, freq)
     else:
         return None
 
@@ -50,14 +44,22 @@ def get_hour_index(date, freq=FREQUENCY.FREQ_1_HOUR, market=MARKET_TYPE.STOCK_CN
         return None
 
     if market == MARKET_TYPE.STOCK_CN:
-        return pd.date_range(date + ' ' + TRADE_TIME.CN_TRADE_AM_S_TIME,
-                             date + ' ' + TRADE_TIME.CN_TRADE_AM_E_TIME, freq=freq, closed='right').append(
-                pd.date_range(date + ' ' + TRADE_TIME.CN_TRADE_PM_S_TIME,
-                              date + ' ' + TRADE_TIME.CN_TRADE_PM_E_TIME, freq=freq, closed='right'))
+        return __get_market_cn_index(date, freq)
     elif market == MARKET_TYPE.STOCK_HK:
-        return pd.date_range(date + ' ' + TRADE_TIME.HK_TRADE_AM_S_TIME,
-                             date + ' ' + TRADE_TIME.HK_TRADE_AM_E_TIME, freq=freq, closed='right').append(
-            pd.date_range(date + ' ' + TRADE_TIME.HK_TRADE_PM_S_TIME,
-                          date + ' ' + TRADE_TIME.HK_TRADE_PM_E_TIME, freq=freq, closed='right'))
+        return __get_market_hk_index(date, freq)
     else:
         return None
+
+
+def __get_market_cn_index(d, freq):
+    return pd.date_range('{} {}'.format(d, TRADE_TIME.CN_TRADE_AM_S_TIME),
+                         '{} {}'.format(d, TRADE_TIME.CN_TRADE_AM_E_TIME), freq=freq, closed='right').append(
+        pd.date_range('{} {}'.format(d, TRADE_TIME.CN_TRADE_PM_S_TIME),
+                      '{} {}'.format(d, TRADE_TIME.CN_TRADE_PM_E_TIME), freq=freq, closed='right'))
+
+
+def __get_market_hk_index(d, freq):
+    return pd.date_range('{} {}'.format(d, TRADE_TIME.HK_TRADE_AM_S_TIME),
+                         '{} {}'.format(d, TRADE_TIME.HK_TRADE_AM_E_TIME), freq=freq, closed='right').append(
+        pd.date_range('{} {}'.format(d, TRADE_TIME.HK_TRADE_PM_S_TIME),
+                      '{} {}'.format(d, TRADE_TIME.HK_TRADE_PM_E_TIME), freq=freq, closed='right'))
