@@ -7,9 +7,16 @@
 # The MIT License (MIT)
 #
 # Copyright (c) 2018 - 2020
+import datetime
+
+from pytdx.exhq import TdxExHq_API
+from pytdx.hq import TdxHq_API
+
+from constant.Config import CONFIG
+from util import LogUtil, ConfigUtil
 
 
-def fetch_stock_day(code, start_date, end_date, if_fq='00', frequence='day'):
+def fetch_stock_day(code, start_date, end_date, if_fq='00', frequency='day'):
     """获取日线及以上级别的数据
 
     参数
@@ -38,7 +45,11 @@ def fetch_stock_day(code, start_date, end_date, if_fq='00', frequence='day'):
         如果出现网络问题/服务器拒绝, 会出现socket:time out 尝试再次获取/更换ip即可, 本函数不做处理
     """
 
-    ip, port = get_mainmarket_ip(ip, port)
+    # TODO check params
+
+    LogUtil.log_info("Begin Fetch Stock Day: [{}] [{}] [{}] [{}] [{}]".format(code, start_date, end_date, if_fq, frequency))
+    ip, port = __get_stock_server_info()
+
     api = TdxHq_API()
     try:
         with api.connect(ip, port, time_out=0.7):
@@ -91,64 +102,6 @@ def fetch_stock_day(code, start_date, end_date, if_fq='00', frequence='day'):
             print(e)
 
 
-def select_best_ip():
-    QA_util_log_info('Selecting the Best Server IP of TDX')
-
-    # 删除exclude ip
-    import json
-    null = None
-    qasetting = QASETTING
-    exclude_ip = {'ip': '1.1.1.1', 'port': 7709}
-    default_ip = {'stock': {'ip': None, 'port': None},
-                  'future': {'ip': None, 'port': None}}
-    alist = []
-    alist.append(exclude_ip)
-
-    ipexclude = qasetting.get_config(
-        section='IPLIST', option='exclude', default_value=alist)
-    exclude_from_stock_ip_list(json.loads(ipexclude))
-
-    ipdefault = qasetting.get_config(
-        section='IPLIST', option='default', default_value=default_ip)
-
-    ipdefault = eval(ipdefault) if isinstance(ipdefault, str) else ipdefault
-    assert isinstance(ipdefault, dict)
-
-    if ipdefault['stock']['ip'] == None:
-
-        data_stock = [ping(x['ip'], x['port'], 'stock') for x in stock_ip_list]
-        best_stock_ip = stock_ip_list[data_stock.index(min(data_stock))]
-    else:
-        if ping(ipdefault['stock']['ip'], ipdefault['stock']['port'], 'stock') < datetime.timedelta(0, 1):
-            print('USING DEFAULT STOCK IP')
-            best_stock_ip = ipdefault['stock']
-        else:
-            print('DEFAULT STOCK IP is BAD, RETESTING')
-            data_stock = [ping(x['ip'], x['port'], 'stock')
-                          for x in stock_ip_list]
-            best_stock_ip = stock_ip_list[data_stock.index(min(data_stock))]
-    if ipdefault['future']['ip'] == None:
-
-        data_future = [ping(x['ip'], x['port'], 'future')
-                       for x in future_ip_list]
-        best_future_ip = future_ip_list[data_future.index(min(data_future))]
-    else:
-        if ping(ipdefault['future']['ip'], ipdefault['future']['port'], 'future') < datetime.timedelta(0, 1):
-            print('USING DEFAULT FUTURE IP')
-            best_future_ip = ipdefault['future']
-        else:
-            print('DEFAULT FUTURE IP is BAD, RETESTING')
-            data_future = [ping(x['ip'], x['port'], 'future')
-                           for x in future_ip_list]
-            best_future_ip = future_ip_list[data_future.index(
-                min(data_future))]
-    ipbest = {'stock': best_stock_ip, 'future': best_future_ip}
-    qasetting.set_config(
-        section='IPLIST', option='default', default_value=ipbest)
-
-    QA_util_log_info('=== The BEST SERVER ===\n stock_ip {} future_ip {}'.format(
-        best_stock_ip['ip'], best_future_ip['ip']))
-    return ipbest
 
 
 
@@ -158,45 +111,30 @@ def select_best_ip():
 
 
 
+def __ping_server(ip, port=7709):
+    """ping 服务器"""
 
-def ping(ip, port=7709, type_='stock'):
     api = TdxHq_API()
-    apix = TdxExHq_API()
-    __time1 = datetime.datetime.now()
+    __start_time = datetime.datetime.now()
     try:
-        if type_ in ['stock']:
-            with api.connect(ip, port, time_out=0.7):
-                res = api.get_security_list(0, 1)
+        with api.connect(ip, port, time_out=0.7):
+            res = api.get_security_list(0, 1)
 
-                if res is not None:
-                    if len(api.get_security_list(0, 1)) > 800:
-                        return datetime.datetime.now() - __time1
-                    else:
-                        print('BAD RESPONSE {}'.format(ip))
-                        return datetime.timedelta(9, 9, 0)
+            if res is not None:
+                if len(api.get_security_list(0, 1)) > 800:
+                    return datetime.datetime.now() - __start_time
                 else:
-
                     print('BAD RESPONSE {}'.format(ip))
                     return datetime.timedelta(9, 9, 0)
-        elif type_ in ['future']:
-            with apix.connect(ip, port, time_out=0.7):
-                res = apix.get_instrument_count()
-                if res is not None:
-                    if res > 40000:
-                        return datetime.datetime.now() - __time1
-                    else:
-                        print('️Bad FUTUREIP REPSONSE {}'.format(ip))
-                        return datetime.timedelta(9, 9, 0)
-                else:
-                    print('️Bad FUTUREIP REPSONSE {}'.format(ip))
-                    return datetime.timedelta(9, 9, 0)
+            else:
+                print('BAD RESPONSE {}'.format(ip))
+                return datetime.timedelta(9, 9, 0)
     except Exception as e:
         if isinstance(e, TypeError):
             print(e)
-            print('Tushare内置的pytdx版本和QUANTAXIS使用的pytdx 版本不同, 请重新安装pytdx以解决此问题')
+            print('Tushare内置的pytdx版本和OnePiece使用的pytdx 版本不同, 请重新安装pytdx以解决此问题')
             print('pip uninstall pytdx')
             print('pip install pytdx')
-
         else:
             print('BAD RESPONSE {}'.format(ip))
         return datetime.timedelta(9, 9, 0)
@@ -228,16 +166,43 @@ def get_extensionmarket_ip(ip, port):
     return ip, port
 
 
-def get_mainmarket_ip(ip, port):
-    """[summary]
+def __get_stock_server_info():
+    """获取股票服务器信息 IP PORT"""
 
-    Arguments:
-        ip {[type]} -- [description]
-        port {[type]} -- [description]
+    LogUtil.log_info("Begin Selecting the Best Server IP of TDX")
 
-    Returns:
-        [type] -- [description]
-    """
+    # 获取服务器列表
+    server_config = ConfigUtil.get_tdx_server_config()
+    best_stock_server = server_config[CONFIG.TDX_BEST_STOCK_SERVER]
+    stock_server_list = server_config[CONFIG.TDX_STOCK_SERVER_LIST]
+
+    if best_stock_server:
+        if __ping_server(best_stock_server['ip'], best_stock_server['port']) < datetime.timedelta(0, 1):
+            LogUtil.log_info("Using The Best Stock Server")
+            return best_stock_server
+    else:
+        server_conn_data = [__ping_server(x['ip'], x['port']) for x in stock_server_list]
+        best_server = stock_server_list[server_conn_data.index(min(server_conn_data))]
+        ConfigUtil.set_tdx_best_server_info(best_server)
+        return best_server
+    # else:
+    #     if ping(ipdefault['stock']['ip'], ipdefault['stock']['port'], 'stock') < datetime.timedelta(0, 1):
+    #         print('USING DEFAULT STOCK IP')
+    #         best_stock_ip = ipdefault['stock']
+    #     else:
+    #         print('DEFAULT STOCK IP is BAD, RETESTING')
+    #         data_stock = [ping(x['ip'], x['port'], 'stock')
+    #                       for x in stock_ip_list]
+    #         best_stock_ip = stock_ip_list[data_stock.index(min(data_stock))]
+    #
+    # ipbest = {'stock': best_stock_ip, 'future': best_future_ip}
+    # qasetting.set_config(
+    #     section='IPLIST', option='default', default_value=ipbest)
+    #
+    # QA_util_log_info('=== The BEST SERVER ===\n stock_ip {} future_ip {}'.format(
+    #     best_stock_ip['ip'], best_future_ip['ip']))
+    # return ipbest
+
 
     global best_ip
     if ip is None and port is None and best_ip['stock']['ip'] is None and best_ip['stock']['port'] is None:

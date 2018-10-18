@@ -18,11 +18,8 @@ def generate_path(base_path, sub_path):
 # OP项目所在目录
 OP_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# 配置文件根目录
-CONFIG_PATH = generate_path(OP_PATH, 'config')
-
-# 日志配置文件
-LOG_CONFIG_PATH = generate_path(CONFIG_PATH, "log.ini")
+# 配置文件
+CONFIG_PATH = generate_path(generate_path(OP_PATH, 'config'), "config.ini")
 
 # OnePiece运行过程中产生的数据存放地址
 OP_RUNTIME_PATH = generate_path(OP_PATH, '.onepiece')
